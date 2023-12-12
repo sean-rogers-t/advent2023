@@ -1,5 +1,6 @@
 import re
-def calibration2(notes):
+
+def calibration(notes):
     listCoords =[]
 
     number_words = {
@@ -19,34 +20,7 @@ def calibration2(notes):
         listCoords.append(num)
     return sum(listCoords)
 
-def calibration1(notes):
-    
-    listCoords =[]
-    
-    for i in range(len(notes)):
-        first = ""
-        last=""
-        
-        coords=notes[i]
-        firstFound = False
-        lastFound = False
-        coordsReverse = coords[::-1]
-        for j in range(len(coords)):
-            if coords[j].isdigit() and not firstFound:
-                first = coords[j]
-                firstFound = True
-            if coordsReverse[j].isdigit() and not lastFound:
-                last = coordsReverse[j]
-                lastFound = True
-        val =int(first+last)
-        listCoords.append(val)
-    
-    return sum(listCoords)
-# Initialize an empty list to store the strings
-strings = []
-
-# Start an infinite loop
-
+# The list of strings
 input_lines = []
 while True:
     line = input()
@@ -57,6 +31,6 @@ while True:
 
 # The list of strings
 strings = input_lines
-print(calibration2(input_lines))
+print(calibration(input_lines))
 # Print the list of strings
 
