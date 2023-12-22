@@ -2,6 +2,7 @@
 # destination range start - source range start - range length
 
 #parse input
+# seeds: 79 14 55 13
 import re
 with open("day5input.txt", "r") as file:
     lines = file.readlines()
@@ -11,11 +12,7 @@ maxSeed=0
 seeds = [int(num) for num in lines[0].split(":")[1].strip().split(" ")]
 seedRanges = seeds
 totalSeeds=[]
-for i in range(len(seedRanges)):
-    if i%2==0:
-        initialSeed=seedRanges[i]
-        seedRange=seedRanges[i+1]
-        totalSeeds+=list(range(initialSeed,initialSeed+seedRange))
+
 lines=lines[2:]
 pattern = r'(\d+)'
 maps=[]
@@ -43,11 +40,11 @@ def createMap(mapping):
     return seedMap
 
 seedDestinations=seeds
-totalSeedDestinations=totalSeeds
+
 for mapping in maps:
     seedDestinations=list(map(createMap(mapping), seedDestinations))
-    totalSeedDestinations=list(map(createMap(mapping), totalSeedDestinations))
+    
 print(min(seedDestinations))
-print(min(totalSeedDestinations))
+
         
     
