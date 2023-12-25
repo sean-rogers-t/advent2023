@@ -5,7 +5,7 @@ lines=[line.strip() for line in lines]
 grid=[]
 for line in lines:
     grid.append(list(line))
-
+#expand universe
 colsToExpand=[]
 for col in range(len(grid[0])):
     if "#" not in [row[col] for row in grid]:
