@@ -44,13 +44,14 @@ def dijkstra(grid):
     return distances[dest], path
 
 # Your grid
-grid = [
+""" grid = [
     [2, 4, 7, 8, 2, 9, 3, 3],
     [6, 4, 7, 5, 8, 3, 9, 2],
     [8, 4, 9, 3, 8, 4, 5, 9],
     [2, 8, 4, 9, 3, 5, 8, 3]
-]
-
+] """
+with open('day17example.txt') as f:
+    grid = [[int(x) for x in line.strip()] for line in f]
 # Find the shortest path and its cost
 shortest_path_cost, shortest_path = dijkstra(grid)
 print("Shortest path cost:", shortest_path_cost)
