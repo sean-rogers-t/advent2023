@@ -63,7 +63,7 @@ def dijkstra(grid,max_steps):
                         predecessors[new_node] = (row, col,direction,step_count)
                         heapq.heappush(queue, (new_dist, new_node))
         
-    possiblePaths =[(key,value) for key,value in distances.items() if key[0]==12 and key[1]==12 and value!=float('inf')]
+    possiblePaths =[(key,value) for key,value in distances.items() if key[0]==dest[0] and key[1]==dest[1] and value!=float('inf')]
     possiblePaths.sort(key=lambda x:x[1])
     start=possiblePaths[0][0]
     path = generate_key_sequence(predecessors, start)
