@@ -1,4 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 import heapq
 def generate_key_sequence(dictionary, start_key, max_length=1000):
     """
@@ -35,20 +37,21 @@ def dijkstra(grid,max_steps):
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
     # Initialize distances and predecessors
-    distances = {(row, col,d,s): float('inf') for row in range(rows) for col in range(cols) for d in range(4) for s in range(max_steps+1)}
-    distances[(0, 0,-1,0)] = 0
-    predecessors = {}
+    
 
     # Priority queue
     queue = [(0, (0, 0,-1,0))]
-
+    passed=set()
     while queue:
         dist, (row, col,direction,step_count) = heapq.heappop(queue)
 
         # Stop if we reach the destination
         if (row, col) == dest:
+            print(dist)
             break
-
+        if (row, col,direction,step_count) in passed:
+            continue
+        passed.add((row, col,direction,step_count))
         for i,(dr, dc) in enumerate(directions):
             if i == (direction + 2) % 4:  # Avoid backtracking
                 continue
@@ -58,17 +61,9 @@ def dijkstra(grid,max_steps):
                 if new_step_count<=max_steps:
                     new_dist = dist + grid[r][c]
                     new_node = (r, c,i,new_step_count)
-                    if new_dist < distances[(r, c,i,new_step_count)]:
-                        distances[new_node] = new_dist
-                        predecessors[new_node] = (row, col,direction,step_count)
-                        heapq.heappush(queue, (new_dist, new_node))
-        
-    possiblePaths =[(key,value) for key,value in distances.items() if key[0]==dest[0] and key[1]==dest[1] and value!=float('inf')]
-    possiblePaths.sort(key=lambda x:x[1])
-    start=possiblePaths[0][0]
-    path = generate_key_sequence(predecessors, start)
-    print_grid(path,grid)
-    return possiblePaths[0][1]
+                    heapq.heappush(queue, (new_dist, new_node))
+   
+    return dist
     # Reconstruct the shortest path
     # Initialize the path
     """ path = []
@@ -99,15 +94,37 @@ def print_grid(path, grid):
         gridpath[stop[0]][stop[1]] = directionDict[stop[2]]
     for row in gridpath:
         print(''.join(row))
-    
+def create_annotated_path_image(grid, path):
+    nrows, ncols = len(grid), len(grid[0])
+    cell_size = 50  # Adjust cell size as needed
+    img = Image.new('RGB', (ncols * cell_size, nrows * cell_size), color='white')
+    draw = ImageDraw.Draw(img)
+
+    # Use a default font, or replace with a specific font if available
+    font = ImageFont.load_default()
+
+    for i in range(nrows):
+        for j in range(ncols):
+            x, y = j * cell_size, i * cell_size
+            text = grid[i][j]
+            w, h = draw.textsize(text, font=font)
+
+            # Check if the current position is part of the path
+            if path[i][j] not in {'*', ' '}:
+                draw.rectangle([x, y, x + cell_size, y + cell_size], fill='lightblue')
+
+            # Draw the text in the center of the cell
+            text_x = x + (cell_size - w) / 2
+            text_y = y + (cell_size - h) / 2
+            draw.text((text_x, text_y), text, fill='black', font=font)
+
+    # Display the image
+    plt.imshow(img)
+    plt.axis('off')
+    plt.show()
             
 # Your grid
-grid = [
-    [2, 4, 7, 8, 2, 9, 3, 3],
-    [6, 4, 7, 5, 8, 3, 9, 2],
-    [8, 4, 9, 3, 8, 4, 5, 9],
-    [2, 8, 4, 9, 3, 5, 8, 3]
-]
+
 with open('day17input.txt') as f:
     grid = [[int(x) for x in line.strip()] for line in f]
 # Find the shortest path and its cost
