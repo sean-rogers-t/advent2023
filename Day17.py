@@ -28,7 +28,7 @@ def dijkstra(grid,max_steps):
             continue
         passed.add((row, col,direction,step_count))
         for i,(dr, dc) in enumerate(directions):
-            if i == (direction + 2) % 4:  # Avoid backtracking
+            if i == (direction + 2) % 4 and direction!=-1:  # Avoid backtracking
                 continue
             r, c = row + dr, col + dc
             if 0 <= r < rows and 0 <= c < cols:
