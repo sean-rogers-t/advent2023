@@ -2,10 +2,8 @@ with open("day19input.txt") as f:
     lines =  [line.strip() for line in f.readlines()]
 workflows=lines[:lines.index('')]
 workflowDict={workflow.split('{')[0]:workflow.split('{')[1][:-1] for workflow in workflows}
+wokflowNameIntervals={workflow.split('{')[0]:[] for workflow in workflows}
 
-parts=lines[lines.index('')+1:]
-parts=[part[1:-1].split(",") for part in parts]
-partDicts=[{coord.split("=")[0]:int(coord.split("=")[1]) for coord in part} for part in parts]
 
 
 'a<2006:qkq,m>2090:A,rfg'
