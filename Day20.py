@@ -16,22 +16,28 @@ class Module:
         self.value = 0
 
     def recieveSignal(self,sender,amp):
+        signals=[]
         if self.type == "%":
-            if self.value == 0:
-                self.value = amp
-            else:
-                self.value = 0
+            
+            if amp==0:
+                self.value = self.value^1
+                for output in self.outputs:
+                    signals.append((self.name,output,self.value))
 
-        if self.type == "&":
-            if self.value == 0:
-                self.value = amp
+        elif self.type == "&":
+            self.inputs[sender] = amp
+            if 0 in self.inputs.values():
+                new_amp = 1
             else:
-                self.value = self.value and amp
+                new_amp = 0
+            for output in self.outputs:
+                signals.append((self.name,output,new_amp))
+        else:
+            for output in self.outputs:
+                signals.append((self.name,output,amp))
 
-        return None
-    def sendSignal(self,amp):
-        signals =[]
         return signals
+    
 
 Modules={}
 for line in lines:
@@ -62,21 +68,40 @@ for line in lines:
                 if output not in Modules:
                     Modules[output] = Module(output)
                 Modules[output].inputs[name] = 0
-signals = [("broadcast",0)]
-signalCount = 1
-while signals:
-    signal = signals.pop(0)
-    sender,amp = signal
+Modules["button"] = Module("button")
+Modules["button"].outputs = ["broadcaster"]
+highCount=0
+lowCount=0
+signalCount=0
+i=0
+for i in range(1000):
+    signals = [("button","broadcaster",0)]
+    signalCount+=1
+    lowCount+=1
+    while signals:
+        signal = signals.pop(0)
+        #print(signal)
+        sender,reciever,amp = signal
+        new_signals = Modules[reciever].recieveSignal(sender,amp)
+        signals.extend(new_signals)
+        signalCount += len(new_signals)
+        for new_signal in new_signals:
+            if new_signal[2]==0:
+                lowCount+=1
+            else:
+                highCount+=1  
     
-    for output in Modules[sender].outputs:
-        if output in Modules:
-            signals.append((output,amp))
-            Modules[output].recieveSignal(sender,amp)
-    signalCount += 1
+    
+    #print(Modules['dt'].inputs)
+print(signalCount, highCount, lowCount)     
+
+
+
+    
     
         
         
             
 
-print(Modules["broadcaster"].inputs)
+
         
