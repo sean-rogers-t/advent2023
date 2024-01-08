@@ -93,7 +93,7 @@ for i in range(1000):
     
     
     #print(Modules['dt'].inputs)
-print(signalCount, highCount, lowCount)     
+print(signalCount, highCount, lowCount, highCount*lowCount)     
 
 
 
