@@ -1,7 +1,7 @@
 import re
 pattern=r'(\d+)'
 
-with open("day9input.txt", "r") as file:
+with open("day9example.txt", "r") as file:
     lines = file.readlines()
 starts=[]
 for line in lines:

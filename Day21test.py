@@ -30,13 +30,16 @@ def bfs_paths(grid, starts, current_length, path_length):
     return bfs_paths(grid, paths_end_points, current_length + 1, path_length)
 
 # Read the grid from file
-with open('day21input.txt') as f:
-    grid = [list(line.strip()) for line in f]
+with open('day21example.txt') as f:
+    grid = [list(line.strip()*11) for line in f]*11
 
 # Find starting point 'S'
-start = next((r, c) for r, row in enumerate(grid) for c, val in enumerate(row) if val == 'S')
-
+starts = [(r, c) for r, row in enumerate(grid) for c, val in enumerate(row) if val == 'S']
+start=starts[60]
+answers=[]
 # Find all end points of paths of length 6 starting at 'S'
-end_points, solution= bfs_paths(grid, [start],0,64)
+for i in [6,10,50]:
+    solution= bfs_paths(grid, [start],0,i)[1]
+    answers.append(solution)
 #print("End points of all paths of length 6 starting at 'S':", end_points)
-print("Number of paths of length 6 starting at 'S':", solution)
+print(answers)
