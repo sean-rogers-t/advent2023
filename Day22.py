@@ -14,8 +14,19 @@ def intersection(brick1,brick2=None):
         return False
 
     return True
+def FindSupport(brick):
+    if brick["supports"]==[]:
+        brick["totalSupport"]=brick["totalSupport"]
+        return 0
+    else: 
+        for support in brick["supports"]:
+            supportedBy=BrickDict[support]["supportedBy"]
+            if len(supportedBy)<=1:
+                brick["totalSupport"]=FindSupport(BrickDict[support]) +1
+            else:
+                return brick["totalSupport"]
 
-with open('day22example.txt') as file:
+with open('day22input.txt') as file:
     bricks=[[np.array(tuple(map(int, part.split(',')))) for part in line.split('~')] for line in file]
 bricks.sort(key=lambda x: x[0][2])
 totalRanges=[]
@@ -26,24 +37,20 @@ for i in range(3):
 print(totalRanges)
 
 diffs = [brick[1]-brick[0] for brick in bricks]
-brickTypes = []
-for brick in bricks:
-    for  i in range(3):
-        if brick[0][i] != brick[1][i]:
-            brickTypes.append(i)
-            break
+
 bottoms = [min(brick[0][2],brick[1][2]) for brick in bricks]
 
 Bricks=[]
-for i,brick in enumerate(bricks): 
-    new_brick={"name":chr(65+i),"start":brick[0],"end":brick[1],"type":brickTypes[i],"bottom":brick[0][2],"top":brick[1][2], "zHeight":diffs[i][2]+1,"supports":[],"supportedBy":[],"base":False}
+BrickDict={}
+for i,brick in enumerate(bricks):
+    new_brick={"name":chr(65+i),"start":brick[0],"end":brick[1],"bottom":brick[0][2],"top":brick[1][2], "zHeight":diffs[i][2]+1,"supports":[],"supportedBy":[],"totalSupport":[],"base":False}
     Bricks.append(new_brick)
-
 
 
 Bricks.sort(key=lambda x: x["bottom"])
 brickQueue=Bricks.copy()
-landedBricks=[{"name":"base","start":(0,0,0),"end":(totalRanges[0][1],totalRanges[1][1],0),"type":brickTypes[0],"bottom":0,"top":0, "zHeight":0,"supports":[],"supportedBy":[],"base":True}]
+BrickDict={brick["name"]:brick for brick in Bricks}
+landedBricks=[{"name":"base","start":(0,0,0),"end":(totalRanges[0][1],totalRanges[1][1],0),"bottom":0,"top":0, "zHeight":0,"supports":[],"supportedBy":[],"totalSupport":[],"base":True}]
 
 while brickQueue:
     brick=brickQueue.pop(0)
@@ -52,7 +59,7 @@ while brickQueue:
         y=landedBrick["name"]
         bottom = brick["bottom"]
         if landedBrick["top"] < bottom-1 and len(brick["supportedBy"])!=0:
-            continue
+            break
         top = landedBrick["top"]
         if intersection((brick["start"],brick["end"]),(landedBrick["start"],landedBrick["end"])):
             brick["supportedBy"].append(landedBrick["name"]) if not landedBrick["base"] else None
@@ -63,11 +70,36 @@ while brickQueue:
     landedBricks.sort(key=lambda x: x["top"],reverse=True)
 
 landedBricks.sort(key=lambda x: x["top"],reverse=False)
+Bricks.sort(key=lambda x: x["top"],reverse=False)
 disintegratedBricks=0
-for brick in landedBricks:
-    print(f"Brick: {brick['name']}, Supports: {brick['supports']}, Supported By: {brick['supportedBy']}")
+""" for brick in Bricks:
+    
+    disintegrate=False
+    print(f"\nBrick: {brick['name']}, Supports: {brick['supports']}, Supported By: {brick['supportedBy']}")
     if brick["supports"]==[]:
         disintegratedBricks+=1
+        disintegrate=True
+        print(f"Disintegrated {brick['name']}, supports nothing")
+    else:
+        disintegrate=True
+        for support in brick["supports"]:
+            if len(BrickDict[support]["supportedBy"])<=1:
+                disintegrate=False
+                print(f"Can't disintegrate {brick['name']}, only brick that supports {support}")
+                
+        if disintegrate:
+            disintegratedBricks+=1
+            print(f"Disintegrated {brick['name']}, all bricks supported by have multiple supports") """
+bases = [brick for brick in Bricks if brick["supportedBy"]==[]]
+for base in bases:
+    FindSupport(base)
+print(f'{disintegratedBricks} bricks disintegrated')
+
+
+                
+            
+                
+
     
 print()
 
