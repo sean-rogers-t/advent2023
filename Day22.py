@@ -14,17 +14,7 @@ def intersection(brick1,brick2=None):
         return False
 
     return True
-def FindSupport(brick):
-    if brick["supports"]==[]:
-        brick["totalSupport"]=brick["totalSupport"]
-        return 0
-    else: 
-        for support in brick["supports"]:
-            supportedBy=BrickDict[support]["supportedBy"]
-            if len(supportedBy)<=1:
-                brick["totalSupport"]=FindSupport(BrickDict[support]) +1
-            else:
-                return brick["totalSupport"]
+
 
 with open('day22input.txt') as file:
     bricks=[[np.array(tuple(map(int, part.split(',')))) for part in line.split('~')] for line in file]
@@ -43,14 +33,15 @@ bottoms = [min(brick[0][2],brick[1][2]) for brick in bricks]
 Bricks=[]
 BrickDict={}
 for i,brick in enumerate(bricks):
-    new_brick={"name":chr(65+i),"start":brick[0],"end":brick[1],"bottom":brick[0][2],"top":brick[1][2], "zHeight":diffs[i][2]+1,"supports":[],"supportedBy":[],"totalSupport":[],"base":False}
+    new_brick={"name":chr(65+i),"start":brick[0],"end":brick[1],"bottom":brick[0][2],"top":brick[1][2], "zHeight":diffs[i][2]+1,"supports":[],"supportedBy":[],"totalSupport":[],"pops":[],"base":False}
     Bricks.append(new_brick)
 
 
 Bricks.sort(key=lambda x: x["bottom"])
 brickQueue=Bricks.copy()
 BrickDict={brick["name"]:brick for brick in Bricks}
-landedBricks=[{"name":"base","start":(0,0,0),"end":(totalRanges[0][1],totalRanges[1][1],0),"bottom":0,"top":0, "zHeight":0,"supports":[],"supportedBy":[],"totalSupport":[],"base":True}]
+
+landedBricks=[{"name":"base","start":(0,0,0),"end":(totalRanges[0][1],totalRanges[1][1],0),"bottom":0,"top":0, "zHeight":0,"supports":[],"supportedBy":[],"totalSupport":[],"pops":[],"base":True}]
 
 while brickQueue:
     brick=brickQueue.pop(0)
@@ -72,28 +63,88 @@ while brickQueue:
 landedBricks.sort(key=lambda x: x["top"],reverse=False)
 Bricks.sort(key=lambda x: x["top"],reverse=False)
 disintegratedBricks=0
-""" for brick in Bricks:
+for brick in Bricks:
     
     disintegrate=False
     print(f"\nBrick: {brick['name']}, Supports: {brick['supports']}, Supported By: {brick['supportedBy']}")
     if brick["supports"]==[]:
         disintegratedBricks+=1
         disintegrate=True
-        print(f"Disintegrated {brick['name']}, supports nothing")
+        #print(f"Disintegrated {brick['name']}, supports nothing")
     else:
         disintegrate=True
         for support in brick["supports"]:
             if len(BrickDict[support]["supportedBy"])<=1:
                 disintegrate=False
-                print(f"Can't disintegrate {brick['name']}, only brick that supports {support}")
+                brick["totalSupport"].append(support)
+                #print(f"Can't disintegrate {brick['name']}, only brick that supports {support}")
                 
         if disintegrate:
             disintegratedBricks+=1
-            print(f"Disintegrated {brick['name']}, all bricks supported by have multiple supports") """
-bases = [brick for brick in Bricks if brick["supportedBy"]==[]]
-for base in bases:
-    FindSupport(base)
+
+            #print(f"Disintegrated {brick['name']}, all bricks supported by have multiple supports")
 print(f'{disintegratedBricks} bricks disintegrated')
+graph = {brick["name"]:{'name':brick["name"],'supports':brick["supports"],'supportedBy':brick["supportedBy"],'totalSupport':brick["totalSupport"],"pops":brick["pops"]} for brick in Bricks}
+bases = [brick for brick in graph.values() if not brick['supportedBy']]
+
+tops = [brick for brick in graph.values() if not brick['supports']]
+
+
+
+graphList = [value.copy() for value in graph.values()]
+
+# Manually create deep copies for popGraph
+popGraph = {}
+for brick in graphList:
+    new_brick = brick.copy()  # Shallow copy the dictionary
+    new_brick['supports'] = brick['supports'].copy()  # Deep copy the list
+    new_brick['supportedBy'] = brick['supportedBy'].copy()
+    new_brick["totalSupport"] = brick["totalSupport"].copy()
+    new_brick["pops"] = brick["pops"].copy()
+     # Deep copy the list
+    popGraph[brick['name']] = new_brick
+
+# Rest of your code
+for start in graph.values():
+    if start["totalSupport"]==[]:
+        continue
+    queue = [start]
+    while queue:
+        brick = queue.pop(0)
+        for support in brick['supports']:
+            popGraph[support]['supportedBy'].remove(brick['name'])
+            if not popGraph[support]['supportedBy']:
+                queue.append(popGraph[support])
+                start["pops"].append(support)
+    
+    for brick in graphList:
+        new_brick = brick.copy()  # Shallow copy the dictionary
+        new_brick['supports'] = brick['supports'].copy()  # Deep copy the list
+        new_brick['supportedBy'] = brick['supportedBy'].copy()
+        new_brick["totalSupport"] = brick["totalSupport"].copy()
+        # Deep copy the list
+        new_brick["pops"] = brick["pops"].copy()
+        popGraph[brick['name']] = new_brick
+sum=0
+for brick in graph:
+    sum+=len(graph[brick]["pops"])
+print(sum)
+
+                
+            
+    
+
+        
+            
+            
+
+
+
+
+
+            
+
+
 
 
                 
