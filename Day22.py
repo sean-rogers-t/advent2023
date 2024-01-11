@@ -1,4 +1,6 @@
 import numpy as np
+import copy
+
 def intersection(brick1,brick2=None):
     if brick2 is None:
         return False
@@ -31,7 +33,7 @@ diffs = [brick[1]-brick[0] for brick in bricks]
 bottoms = [min(brick[0][2],brick[1][2]) for brick in bricks]
 
 Bricks=[]
-BrickDict={}
+graph={}
 for i,brick in enumerate(bricks):
     new_brick={"name":chr(65+i),"start":brick[0],"end":brick[1],"bottom":brick[0][2],"top":brick[1][2], "zHeight":diffs[i][2]+1,"supports":[],"supportedBy":[],"totalSupport":[],"pops":[],"base":False}
     Bricks.append(new_brick)
@@ -39,7 +41,7 @@ for i,brick in enumerate(bricks):
 
 Bricks.sort(key=lambda x: x["bottom"])
 brickQueue=Bricks.copy()
-BrickDict={brick["name"]:brick for brick in Bricks}
+graph={brick["name"]:brick for brick in Bricks}
 
 landedBricks=[{"name":"base","start":(0,0,0),"end":(totalRanges[0][1],totalRanges[1][1],0),"bottom":0,"top":0, "zHeight":0,"supports":[],"supportedBy":[],"totalSupport":[],"pops":[],"base":True}]
 
@@ -74,7 +76,7 @@ for brick in Bricks:
     else:
         disintegrate=True
         for support in brick["supports"]:
-            if len(BrickDict[support]["supportedBy"])<=1:
+            if len(graph[support]["supportedBy"])<=1:
                 disintegrate=False
                 brick["totalSupport"].append(support)
                 #print(f"Can't disintegrate {brick['name']}, only brick that supports {support}")
@@ -84,51 +86,27 @@ for brick in Bricks:
 
             #print(f"Disintegrated {brick['name']}, all bricks supported by have multiple supports")
 print(f'{disintegratedBricks} bricks disintegrated')
-graph = {brick["name"]:{'name':brick["name"],'supports':brick["supports"],'supportedBy':brick["supportedBy"],'totalSupport':brick["totalSupport"],"pops":brick["pops"]} for brick in Bricks}
-bases = [brick for brick in graph.values() if not brick['supportedBy']]
 
-tops = [brick for brick in graph.values() if not brick['supports']]
-
-
-
-graphList = [value.copy() for value in graph.values()]
-
-# Manually create deep copies for popGraph
-popGraph = {}
-for brick in graphList:
-    new_brick = brick.copy()  # Shallow copy the dictionary
-    new_brick['supports'] = brick['supports'].copy()  # Deep copy the list
-    new_brick['supportedBy'] = brick['supportedBy'].copy()
-    new_brick["totalSupport"] = brick["totalSupport"].copy()
-    new_brick["pops"] = brick["pops"].copy()
-     # Deep copy the list
-    popGraph[brick['name']] = new_brick
-
-# Rest of your code
+# Part 2
+# Process the graph
+total_sum = 0
 for start in graph.values():
-    if start["totalSupport"]==[]:
-        continue
-    queue = [start]
-    while queue:
-        brick = queue.pop(0)
-        for support in brick['supports']:
-            popGraph[support]['supportedBy'].remove(brick['name'])
-            if not popGraph[support]['supportedBy']:
-                queue.append(popGraph[support])
-                start["pops"].append(support)
-    
-    for brick in graphList:
-        new_brick = brick.copy()  # Shallow copy the dictionary
-        new_brick['supports'] = brick['supports'].copy()  # Deep copy the list
-        new_brick['supportedBy'] = brick['supportedBy'].copy()
-        new_brick["totalSupport"] = brick["totalSupport"].copy()
-        # Deep copy the list
-        new_brick["pops"] = brick["pops"].copy()
-        popGraph[brick['name']] = new_brick
-sum=0
-for brick in graph:
-    sum+=len(graph[brick]["pops"])
-print(sum)
+    if start["totalSupport"]:
+        # Deep copy inside the loop for each start
+        popGraph = copy.deepcopy(graph)
+
+        queue = [start]
+        while queue:
+            brick = queue.pop(0)
+            for support in brick['supports']:
+                popGraph[support]['supportedBy'].remove(brick['name'])
+                if not popGraph[support]['supportedBy']:
+                    queue.append(popGraph[support])
+                    start["pops"].append(support)
+
+        total_sum += len(start["pops"])
+
+print(total_sum)
 
                 
             
