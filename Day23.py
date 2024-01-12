@@ -2,6 +2,33 @@
 import numpy as np
 import heapq
 import graphviz
+def DfsMakeDAG(grid,DAG,start,finish,good_directions):
+    for r,c in DAG.keys():
+        stack = [((r,c),0)]
+        visited = set((r,c))
+        while stack:
+            node,dist = stack.pop()
+            if node in DAG:
+                DAG[node]["incoming"].append([r,c,dist])
+                DAG[r,c]["outgoing"].append([node,dist])
+                continue
+            for dr,dc in good_directions[grid[r][c]]:
+                nr,nc = r+dr,c+dc
+                if 0<=nr<len(grid) and 0<=nc<len(grid[0]) and (nr,nc) not in visited and grid[nr][nc] != "#":
+                    stack.append([(nr,nc),dist+1])
+                    visited.add((nr,nc))
+    return DAG
+sseen=set()
+def dfs(node):
+    if node == finish:
+        return 0
+    longest_path = -float("inf")
+    sseen.add(node)
+    for neighbor in DAG[node]["outgoing"]:
+        if neighbor[0] not in sseen:
+            longest_path = max(longest_path,dfs(neighbor[0])+neighbor[1])
+    sseen.remove(node)
+    return longest_path
 
 def dfsMakeDAG(junctions,beginning,grid, DAG, start,finish,direction = None):
     visited = set()
@@ -134,8 +161,8 @@ junctions.append(finish)
 DAG = {node:{"incoming":[],"outgoing":[]} for node in junctions}
 
 dfsMakeDAG(junctions,start,grid,DAG, start, finish)
-
-
+#da = DfsMakeDAG(grid,DAG,start,finish,directions)
+dist2 = dfs(start)
 
 dist = longestPathDAG(DAG,start,finish)
 top_order = topologicalSort(DAG)
@@ -170,6 +197,7 @@ print(dot.source) # doctest: +NORMALIZE_WHITESPACE +NO_EXE
 #doctest_mark_exe()
 dot.render('doctest-output/round-table.gv', view=True)
 
+#Brute force pt 2
 visited = set()
 max_length = [0]
 longest_path = [[start]]
