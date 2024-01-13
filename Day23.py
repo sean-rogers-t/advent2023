@@ -2,6 +2,8 @@
 import numpy as np
 import heapq
 import graphviz
+
+
 def DfsMakeDAG(grid,DAG,start,finish,good_directions):
     for r,c in DAG.keys():
         stack = [((r,c),0)]
@@ -18,6 +20,8 @@ def DfsMakeDAG(grid,DAG,start,finish,good_directions):
                     stack.append([(nr,nc),dist+1])
                     visited.add((nr,nc))
     return DAG
+
+
 sseen=set()
 def dfs(node):
     if node == finish:
@@ -70,6 +74,7 @@ def dfsMakeDAG(junctions,beginning,grid, DAG, start,finish,direction = None):
                     stack.append((r,c))
                     distance+=1
 
+
 def dfsLongestPath(graph,start,finish):
     maxLength=0
     numPaths=0
@@ -78,15 +83,13 @@ def dfsLongestPath(graph,start,finish):
 
     while stack:
         node, length, path = stack.pop()
-        if node[0]==finish:
-            maxLength = max(maxLength,length)
-            numPaths+=1
-            continue
+        
         for neighbor in graph[node[0]]:
             if neighbor[0] not in path:
                 new_visited = path.copy()
                 new_visited.add(neighbor[0])
                 stack.append((neighbor,length+neighbor[1],new_visited))
+                maxLength = max(maxLength,length+neighbor[1])
 
     
     return maxLength, numPaths
@@ -122,6 +125,8 @@ def topologicalSort(DAG):
         raise Exception("DAG has at least one cycle")
 
     return top_order
+
+
 def longestPathDAG(DAG, source, sink):
     top_order = topologicalSort(DAG)
     distance = {node: -float("inf") for node in DAG}
@@ -136,6 +141,7 @@ def longestPathDAG(DAG, source, sink):
                 distance[neighbor[0]] = new_dist
 
     return distance[sink]
+
 
 with open("day23input.txt") as f:
     grid =  [line.strip() for line in f.readlines()]
@@ -162,12 +168,28 @@ DAG = {node:{"incoming":[],"outgoing":[]} for node in junctions}
 
 dfsMakeDAG(junctions,start,grid,DAG, start, finish)
 #da = DfsMakeDAG(grid,DAG,start,finish,directions)
+
 dist2 = dfs(start)
 
 dist = longestPathDAG(DAG,start,finish)
-top_order = topologicalSort(DAG)
 
-dot = graphviz.Digraph(comment='Garden')
+
+
+graph = {node:[] for node in DAG}
+for node in DAG:
+    for neighbor in DAG[node]["outgoing"]:
+        graph[node].append(neighbor)
+    for neighbor in DAG[node]["incoming"]:
+        graph[node].append(neighbor)
+
+#Brute force pt 2
+visited = set()
+max_length = [0]
+longest_path = [[start]]
+path_length = 0
+dfsLongestPath(graph,start,finish)
+
+""" dot = graphviz.Digraph(comment='Garden')
 dot  #doctest: +ELLIPSIS
 for i, junction in enumerate(top_order):
     dot.node(str(i),str(junction)) # doctest: +NO_EXE
@@ -179,13 +201,6 @@ print(dot.source) # doctest: +NORMALIZE_WHITESPACE +NO_EXE
 dot.render('doctest-output/round-table.gv', view=True)  # doctest: +SKIP
 print(dist)
 
-graph = {node:[] for node in DAG}
-for node in DAG:
-    for neighbor in DAG[node]["outgoing"]:
-        graph[node].append(neighbor)
-    for neighbor in DAG[node]["incoming"]:
-        graph[node].append(neighbor)
-
 dot = graphviz.Graph(comment='Garden')
 dot  #doctest: +ELLIPSIS
 for i, junction in enumerate(top_order):
@@ -195,18 +210,7 @@ for node in DAG:
         dot.edge(str(top_order.index(node)),str(top_order.index(neighbor[0])),label=str(neighbor[1]))
 print(dot.source) # doctest: +NORMALIZE_WHITESPACE +NO_EXE
 #doctest_mark_exe()
-dot.render('doctest-output/round-table.gv', view=True)
-
-#Brute force pt 2
-visited = set()
-max_length = [0]
-longest_path = [[start]]
-path_length = 0
-dfsLongestPath(graph,start,finish)
-
-
-
-
+dot.render('doctest-output/round-table.gv', view=True) """
 
 
     
