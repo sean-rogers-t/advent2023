@@ -1,21 +1,53 @@
 from graphviz import Graph
-def visualize_graph_with_graphviz(adjacency_matrix):
+def visualize_graph_with_graphviz(adjacency_matrix, index_to_node):
     # Initialize an undirected graph
-    g = Graph('G', filename='graph.gv')
+    g = Graph('G', filename='graph.gv', engine='dot')
 
-    # Add nodes
+    # Add nodes with labels from index_to_node mapping
     for i in range(len(adjacency_matrix)):
-        g.node(str(i))
+        node_label = f"{i} ({index_to_node[i]})"
+        if not isEmpty(adjacency_matrix, i):
+            g.node(node_label)
 
-    # Add edges based on the adjacency matrix
+    # Add weighted edges based on the adjacency matrix
     for i in range(len(adjacency_matrix)):
         for j in range(i+1, len(adjacency_matrix)):
-            if adjacency_matrix[i][j] > 0:
-                g.edge(str(i), str(j))
+            if adjacency_matrix[i][j] > 0:  # Check for an edge
+                edge_label = str(adjacency_matrix[i][j])
+                g.edge(f"{i} ({index_to_node[i]})", f"{j} ({index_to_node[j]})", label=edge_label)
 
     # Render and view the graph
     g.view()
+def visualize_graph_with_graphviz(adjacency_matrix):
+    # Initialize an undirected graph
+    g = Graph('G', filename='graph.gv', engine='dot')
 
+    # Add nodes with labels from index_to_node mapping
+    for i in range(len(adjacency_matrix)):
+        node_label = f"{i}"
+        if not isEmpty(adjacency_matrix, i):
+            g.node(node_label)
+
+    # Add weighted edges based on the adjacency matrix
+    for i in range(len(adjacency_matrix)):
+        for j in range(i+1, len(adjacency_matrix)):
+            if adjacency_matrix[i][j] > 0:  # Check for an edge
+                edge_label = str(adjacency_matrix[i][j])
+                g.edge(f"{i}", f"{j}", label=edge_label)
+
+    # Render and view the graph
+    g.view()
+def isEmpty(adjacency, node):
+    """
+    Check if a node is isolated in the graph.
+    """
+    n = len(adjacency)
+    for i in range(n):
+        if adjacency[node][i] > 0:
+            return False
+        if adjacency[i][node] > 0:
+            return False
+    return True
 
 def merge_nodes(adjacency, a, b):
     """
@@ -26,15 +58,14 @@ def merge_nodes(adjacency, a, b):
     for i in range(n):
         adjacency[a][i] += adjacency[b][i]
         adjacency[i][a] += adjacency[i][b]
+        adjacency[b][i] = 0  # Remove connections to b
+        adjacency[i][b] = 0
     adjacency[a][a] = 0  # Remove potential self-loop
 
     # Remove node b from the adjacency matrix
-    # Remove b's row
     adjacency.pop(b)
-    # Remove b's column
-    for i in range(len(adjacency)):
-        adjacency[i].pop(b)
-
+    for row in adjacency:
+        row.pop(b)
 
 def MAS(sequence, complement, adjacency):
     n = len(sequence)
@@ -44,20 +75,21 @@ def MAS(sequence, complement, adjacency):
         adj_num =0 
         for other in sequence:
             if adjacency[node][other]>0:
-                adj_num += 1
+                adj_num += adjacency[node][other]
         if adj_num > max_adj:
             max_adj = adj_num
             max_node = node
     return max_node
 
-def min_cut_phase(adjacency,start=0):
-    sequence = [0]
-    complement = list(range(1,len(adjacency)))
+def min_cut_phase(adjacency,start=[0]):
+    sequence = start
+    complement = list(range(0,len(adjacency)))
+    complement.remove(start[0])
     while len(complement)>0:
         node = MAS(sequence, complement, adjacency)
         sequence.append(node)
-        if node in complement:
-            complement.remove(node)
+        
+        complement.remove(node)
     s , t  = sequence[-2], sequence[-1]
     return sequence, t
 
@@ -66,7 +98,7 @@ def stoer_wagner(adjacency):
     components = [[i] for i in range(n)]
     a=0
     while len(adjacency) > 2:
-        sequence, _ = min_cut_phase(adjacency,a)
+        sequence, _ = min_cut_phase(adjacency,[a])
         a, b = sequence[-2], sequence[-1]
 
         # Update components before contracting graph
@@ -74,7 +106,7 @@ def stoer_wagner(adjacency):
         components.pop(b)  # Reflect contraction in components list
 
         merge_nodes(adjacency, a, b)
-        visualize_graph_with_graphviz(adjacency,index_to_node)  # This now also reduces the adjacency matrix size
+        visualize_graph_with_graphviz(adjacency)  
         x=0
 
     # Output the sizes of the two final components
@@ -111,25 +143,11 @@ for line in lines:
             adjacency[node_idx][neighbor_idx] = 1
             adjacency[neighbor_idx][node_idx] = 1
 
-def visualize_graph_with_graphviz(adjacency_matrix,index_to_node):
-    # Initialize an undirected graph
-    g = Graph('G', filename='graph.gv')
-
-    # Add nodes
-    for i in range(len(adjacency_matrix)):
-        g.node(str(i) + ", " + index_to_node[i])
-
-    # Add edges based on the adjacency matrix
-    for i in range(len(adjacency_matrix)):
-        for j in range(i+1, len(adjacency_matrix)):
-            if adjacency_matrix[i][j] > 0:
-                g.edge(str(i) + ", " + index_to_node[i], str(j) + ", " + index_to_node[j])
-
-    # Render and view the graph
-    g.view()
-
-visualize_graph_with_graphviz(adjacency,index_to_node)
-print(stoer_wagner(adjacency))
+example  = [[0,2,0,0,3,0,0,0],[2,0,3,0,2,2,0,0],[0,3,0,4,0,0,2,0],[0,0,4,0,0,0,2,2],[3,2,0,0,0,3,0,0],
+            [0,2,0,0,3,0,1,0],[0,0,2,2,0,1,0,3],[0,0,0,3,0,0,3,0]]
+#visualize_graph_with_graphviz(adjacency,index_to_node)
+visualize_graph_with_graphviz(example)
+print(stoer_wagner(example))
 
 
 
