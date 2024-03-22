@@ -1,0 +1,5 @@
+graph G {
+	"0, jqt"
+	"1, rhn"
+	"0, jqt" -- "1, rhn"
+}

@@ -1,3 +1,4 @@
+import sympy
 with open("day24input.txt") as f:
     hail =  [[list(map(int,part.split(","))) for part in line.strip().split("@")] for line in f.readlines()]
 
@@ -14,6 +15,9 @@ def intersection(point1,derivative1, point2,derivative2):
     t2 = (x-x2)/derivative2[0]
     return (x,y,t1,t2)
 count = 0
+min = 200000000000000
+max = 400000000000000
+# pt1
 for i, stone1 in enumerate(hail[:-1]):
     for j, stone2 in enumerate(hail[i+1:]):
     
@@ -26,12 +30,27 @@ for i, stone1 in enumerate(hail[:-1]):
         if derivative1[1]/derivative1[0] == derivative2[1]/derivative2[0]:
             continue
         x,y,t1,t2 = intersection(point1,derivative1, point2,derivative2)
-        if 7<x<27 and 7<y<27 and t1>0 and t2>0:
+        if min<x<max and min<y<max and t1>0 and t2>0:
             count += 1
             #hmm
             
 print(count)
         
+#pt2
+xr,yr,zr,vxr,vyr,vzr = sympy.symbols("xr yr zr vxr vyr vzr")
+kinetic_equations = []
+i=0
+for stone in hail:
+    x,y,z = stone[0]
+    vx,vy,vz = stone[1]
+    kinetic_equations.append((vyr-vy)*(x-xr)-(vxr-vx)*(y-yr))
+    kinetic_equations.append((vzr-vz)*(x-xr)-(vxr-vx)*(z-zr))
+    i=i+1
+    if i>6:
+        break
+godRock = sympy.solve(kinetic_equations)
+print(godRock)
+print(godRock[0][xr]+godRock[0][yr]+godRock[0][zr])
 
     
 
