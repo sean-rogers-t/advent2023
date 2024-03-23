@@ -91,14 +91,18 @@ def min_cut_phase(adjacency,start=[0]):
         
         complement.remove(node)
     s , t  = sequence[-2], sequence[-1]
-    return sequence, t
+    cut_value = sum(adjacency[t][i] for i in range(len(adjacency)) if i != t)
+    x=0
 
+    return sequence, cut_value
 def stoer_wagner(adjacency):
     n = len(adjacency)
+    min_cut = float('inf') 
     components = [[i] for i in range(n)]
-    a=0
+    a=1
     while len(adjacency) > 2:
-        sequence, _ = min_cut_phase(adjacency,[a])
+        sequence, cut_value = min_cut_phase(adjacency,[a])
+        min_cut = min(min_cut, cut_value)
         a, b = sequence[-2], sequence[-1]
 
         # Update components before contracting graph
@@ -106,12 +110,12 @@ def stoer_wagner(adjacency):
         components.pop(b)  # Reflect contraction in components list
 
         merge_nodes(adjacency, a, b)
-        visualize_graph_with_graphviz(adjacency)  
+        #visualize_graph_with_graphviz(adjacency)  
         x=0
 
     # Output the sizes of the two final components
     sizes = [len(component) for component in components]
-    return sizes
+    return min_cut, sizes
 with open("day25example.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
