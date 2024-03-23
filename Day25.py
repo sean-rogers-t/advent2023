@@ -1,5 +1,5 @@
 from graphviz import Graph
-def visualize_graph_with_graphviz(adjacency_matrix, index_to_node):
+def visualize_graph_with_graphviz_nodes(adjacency_matrix, index_to_node):
     # Initialize an undirected graph
     g = Graph('G', filename='graph.gv', engine='dot')
 
@@ -21,19 +21,29 @@ def visualize_graph_with_graphviz(adjacency_matrix, index_to_node):
 def visualize_graph_with_graphviz(adjacency_matrix,components):
     # Initialize an undirected graph
     g = Graph('G', filename='graph.gv', engine='dot')
-
+    nodes = []
     # Add nodes with labels from index_to_node mapping
     for i in range(len(components)):
-        node_label = components[i].join(",")
-        if not isEmpty(adjacency_matrix, i):
+        if len(components[i]) == 0:
+            continue
+        node_label = ", ".join([str(i) for i in components[i]])
+        min_node = min(components[i])
+        if not isEmpty(adjacency_matrix, min_node):
             g.node(node_label)
+            nodes.append(node_label)
 
     # Add weighted edges based on the adjacency matrix
-    for i in range(len(adjacency_matrix)):
-        for j in range(i+1, len(adjacency_matrix)):
-            if adjacency_matrix[i][j] > 0:  # Check for an edge
-                edge_label = str(adjacency_matrix[i][j])
-                g.edge(f"{i}", f"{j}", label=edge_label)
+    for i in range(len(components)):
+        for j in range(i+1, len(components)):
+            if len(components[i]) == 0 or len(components[j]) == 0:
+                continue
+            node_i = min(components[i])
+            node_j = min(components[j])
+            if adjacency_matrix[node_i][node_j] > 0:  # Check for an edge
+                node_label_i = ", ".join([str(i) for i in components[i]])
+                node_label_j = ", ".join([str(i) for i in components[j]])
+                edge_label = str(adjacency_matrix[node_i][node_j])
+                g.edge(node_label_i, node_label_j, label=edge_label)
 
     # Render and view the graph
     g.view()
@@ -81,9 +91,9 @@ def MAS(sequence, complement, adjacency):
             max_node = node
     return max_node
 
-def min_cut_phase(adjacency,start=[0]):
+def min_cut_phase(adjacency,start,components):
     sequence = start
-    complement = list(range(0,len(adjacency)))
+    complement = [min(components[i]) for i in range(len(components)) if len(components[i])>0]
     complement.remove(start[0])
     while len(complement)>0:
         node = MAS(sequence, complement, adjacency)
@@ -93,30 +103,43 @@ def min_cut_phase(adjacency,start=[0]):
     s , t  = sequence[-2], sequence[-1]
     cut_value = sum(adjacency[t][i] for i in range(len(adjacency)) if i != t)
     x=0
-
     return sequence, cut_value
-def stoer_wagner(adjacency):
+
+def stoer_wagner(adjacency,components):
     n = len(adjacency)
     min_cut = float('inf') 
-    components = [[i] for i in range(n)]
-    a=1
-    while len(adjacency) > 2:
-        sequence, cut_value = min_cut_phase(adjacency,[a])
+    
+    start=1
+    component_num = len(list(filter(lambda comp: len(comp) > 0, components)))
+    while component_num > 2:
+        sequence, cut_value = min_cut_phase(adjacency,[start],components)
         min_cut = min(min_cut, cut_value)
         a, b = sequence[-2], sequence[-1]
         min_node = min(a, b)
         max_node = max(a, b)
+        start = min_node
         # Update components before contracting graph
         components[min_node].extend(components[max_node])
-        components.pop(max_node)  # Reflect contraction in components list
+        components[min_node].sort()
+        components[max_node] =[]  # Reflect contraction in components list
 
         merge_nodes(adjacency, min_node, max_node)
-        #visualize_graph_with_graphviz(adjacency)  
-        x=0
+        visualize_graph_with_graphviz(adjacency,components)
+        component_num = len(list(filter(lambda comp: len(comp) > 0, components)))
 
     # Output the sizes of the two final components
-    sizes = [len(component) for component in components]
+    sizes = [len(component) for component in components if len(component) > 0]
     return min_cut, sizes
+
+
+# example  = [[0,2,0,0,3,0,0,0],[2,0,3,0,2,2,0,0],[0,3,0,4,0,0,2,0],[0,0,4,0,0,0,2,2],[3,2,0,0,0,3,0,0],
+#             [0,2,0,0,3,0,1,0],[0,0,2,2,0,1,0,3],[0,0,0,2,0,0,3,0]]
+# components = [[i] for i in range(8)]
+# #visualize_graph_with_graphviz(adjacency,index_to_node)
+# visualize_graph_with_graphviz(example,components)
+# print(stoer_wagner(example,components))
+# visualize_graph_with_graphviz(example,components)
+
 with open("day25example.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
@@ -148,12 +171,11 @@ for line in lines:
             adjacency[node_idx][neighbor_idx] = 1
             adjacency[neighbor_idx][node_idx] = 1
 
-example  = [[0,2,0,0,3,0,0,0],[2,0,3,0,2,2,0,0],[0,3,0,4,0,0,2,0],[0,0,4,0,0,0,2,2],[3,2,0,0,0,3,0,0],
-            [0,2,0,0,3,0,1,0],[0,0,2,2,0,1,0,3],[0,0,0,3,0,0,3,0]]
-#visualize_graph_with_graphviz(adjacency,index_to_node)
-visualize_graph_with_graphviz(example)
-print(stoer_wagner(example))
-
+components = [[i] for i in range(n)]
+visualize_graph_with_graphviz(adjacency,components)
+visualize_graph_with_graphviz_nodes(adjacency, index_to_node)
+print(stoer_wagner(adjacency,components))
+visualize_graph_with_graphviz(adjacency,components)
 
 
 
