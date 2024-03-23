@@ -18,13 +18,13 @@ def visualize_graph_with_graphviz(adjacency_matrix, index_to_node):
 
     # Render and view the graph
     g.view()
-def visualize_graph_with_graphviz(adjacency_matrix):
+def visualize_graph_with_graphviz(adjacency_matrix,components):
     # Initialize an undirected graph
     g = Graph('G', filename='graph.gv', engine='dot')
 
     # Add nodes with labels from index_to_node mapping
-    for i in range(len(adjacency_matrix)):
-        node_label = f"{i}"
+    for i in range(len(components)):
+        node_label = components[i].join(",")
         if not isEmpty(adjacency_matrix, i):
             g.node(node_label)
 
@@ -63,9 +63,9 @@ def merge_nodes(adjacency, a, b):
     adjacency[a][a] = 0  # Remove potential self-loop
 
     # Remove node b from the adjacency matrix
-    adjacency.pop(b)
-    for row in adjacency:
-        row.pop(b)
+    # adjacency.pop(b)
+    # for row in adjacency:
+    #     row.pop(b)
 
 def MAS(sequence, complement, adjacency):
     n = len(sequence)
@@ -104,12 +104,13 @@ def stoer_wagner(adjacency):
         sequence, cut_value = min_cut_phase(adjacency,[a])
         min_cut = min(min_cut, cut_value)
         a, b = sequence[-2], sequence[-1]
-
+        min_node = min(a, b)
+        max_node = max(a, b)
         # Update components before contracting graph
-        components[a].extend(components[b])
-        components.pop(b)  # Reflect contraction in components list
+        components[min_node].extend(components[max_node])
+        components.pop(max_node)  # Reflect contraction in components list
 
-        merge_nodes(adjacency, a, b)
+        merge_nodes(adjacency, min_node, max_node)
         #visualize_graph_with_graphviz(adjacency)  
         x=0
 
