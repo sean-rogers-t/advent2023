@@ -27,7 +27,7 @@ def visualize_graph_with_graphviz(adjacency_matrix,components):
         if len(components[i]) == 0:
             continue
         node_label = ", ".join([str(i) for i in components[i]])
-        min_node = min(components[i])
+        min_node = components[i][0]
         if not isEmpty(adjacency_matrix, min_node):
             g.node(node_label)
             nodes.append(node_label)
@@ -37,8 +37,8 @@ def visualize_graph_with_graphviz(adjacency_matrix,components):
         for j in range(i+1, len(components)):
             if len(components[i]) == 0 or len(components[j]) == 0:
                 continue
-            node_i = min(components[i])
-            node_j = min(components[j])
+            node_i = components[i][0]
+            node_j = components[j][0]
             if adjacency_matrix[node_i][node_j] > 0:  # Check for an edge
                 node_label_i = ", ".join([str(i) for i in components[i]])
                 node_label_j = ", ".join([str(i) for i in components[j]])
@@ -47,6 +47,40 @@ def visualize_graph_with_graphviz(adjacency_matrix,components):
 
     # Render and view the graph
     g.view()
+
+def create_graph(vertex_pairs):
+    graph = {}
+    for pair in vertex_pairs:
+        # Unpack the pair into two vertices
+        a, b = pair
+        # Add each vertex to the graph dictionary if not already present
+        if a not in graph:
+            graph[a] = []
+        if b not in graph:
+            graph[b] = []
+        # Add each vertex to the other's adjacency list
+        graph[a].append(b)
+        graph[b].append(a)
+    return graph
+
+def bfs_connected_component_size(graph, start_node):
+    # Initialize a set to keep track of visited nodes
+    visited = set()
+    # Initialize a queue for BFS
+    queue = [start_node]
+    
+    while queue:
+        # Dequeue a vertex from the queue
+        vertex = queue.pop(0)
+        # If not visited, visit the node
+        if vertex not in visited:
+            visited.add(vertex)
+            # Add all unvisited neighbors to the queue
+            queue.extend([node for node in graph[vertex] if node not in visited])
+    
+    # The size of the connected component is the number of visited nodes
+    return len(visited)
+
 def isEmpty(adjacency, node):
     """
     Check if a node is isolated in the graph.
@@ -93,7 +127,7 @@ def MAS(sequence, complement, adjacency):
 
 def min_cut_phase(adjacency,start,components):
     sequence = start
-    complement = [min(components[i]) for i in range(len(components)) if len(components[i])>0]
+    complement = [components[i][0] for i in range(len(components)) if len(components[i])>0]
     complement.remove(start[0])
     while len(complement)>0:
         node = MAS(sequence, complement, adjacency)
@@ -108,39 +142,45 @@ def min_cut_phase(adjacency,start,components):
 def stoer_wagner(adjacency,components):
     n = len(adjacency)
     min_cut = float('inf') 
-    
+    cuts =[]
+    stPairs =[]
     start=1
     component_num = len(list(filter(lambda comp: len(comp) > 0, components)))
-    while component_num > 2:
+    while component_num > 1:
         sequence, cut_value = min_cut_phase(adjacency,[start],components)
+        cuts.append(cut_value)
         min_cut = min(min_cut, cut_value)
-        a, b = sequence[-2], sequence[-1]
-        min_node = min(a, b)
-        max_node = max(a, b)
-        start = min_node
+        s, t = sequence[-2], sequence[-1]
+        stPairs.append((s,t))
+        start = s
         # Update components before contracting graph
-        components[min_node].extend(components[max_node])
-        components[min_node].sort()
-        components[max_node] =[]  # Reflect contraction in components list
+        components[s].extend(components[t])
+        
+        components[t] =[]  # Reflect contraction in components list
 
-        merge_nodes(adjacency, min_node, max_node)
-        visualize_graph_with_graphviz(adjacency,components)
+        merge_nodes(adjacency, s, t)
+        #visualize_graph_with_graphviz(adjacency,components)
         component_num = len(list(filter(lambda comp: len(comp) > 0, components)))
 
     # Output the sizes of the two final components
     sizes = [len(component) for component in components if len(component) > 0]
-    return min_cut, sizes
+    return min_cut, cuts, stPairs
 
-
-# example  = [[0,2,0,0,3,0,0,0],[2,0,3,0,2,2,0,0],[0,3,0,4,0,0,2,0],[0,0,4,0,0,0,2,2],[3,2,0,0,0,3,0,0],
-#             [0,2,0,0,3,0,1,0],[0,0,2,2,0,1,0,3],[0,0,0,2,0,0,3,0]]
-# components = [[i] for i in range(8)]
-# #visualize_graph_with_graphviz(adjacency,index_to_node)
+def find_size(min_cut,cuts,stPairs,n):
+    min_cut_idx = cuts.index(min_cut)
+    graph  = create_graph(stPairs[:min_cut_idx])
+    start = stPairs[min_cut_idx][1]
+    size = bfs_connected_component_size(graph,start)
+    return size, n-size, size*(n-size)
+example  = [[0,2,0,0,3,0,0,0],[2,0,3,0,2,2,0,0],[0,3,0,4,0,0,2,0],[0,0,4,0,0,0,2,2],[3,2,0,0,0,3,0,0],
+            [0,2,0,0,3,0,1,0],[0,0,2,2,0,1,0,3],[0,0,0,2,0,0,3,0]]
+#components = [[i] for i in range(8)]
+#visualize_graph_with_graphviz(adjacency,index_to_node)
 # visualize_graph_with_graphviz(example,components)
-# print(stoer_wagner(example,components))
-# visualize_graph_with_graphviz(example,components)
+# mincut,cuts,stPairs = stoer_wagner(example,components)
+# print(find_size(mincut,cuts,stPairs))
 
-with open("day25example.txt") as f:
+with open("day25input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
 
@@ -173,9 +213,8 @@ for line in lines:
 
 components = [[i] for i in range(n)]
 visualize_graph_with_graphviz(adjacency,components)
-visualize_graph_with_graphviz_nodes(adjacency, index_to_node)
-print(stoer_wagner(adjacency,components))
-visualize_graph_with_graphviz(adjacency,components)
+mincut,cuts,stPairs = stoer_wagner(adjacency,components)
+print(find_size(mincut,cuts,stPairs,n))
 
 
 
